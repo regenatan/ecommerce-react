@@ -50,7 +50,6 @@ const [showSuccess, setShowSuccess] = useState(false);
       setLocation('/');
     }
   };
- 
 
   return (
     <div className="container mt-5">
