@@ -1,34 +1,35 @@
 import { atom, useAtom } from 'jotai';
 
-// Define the initial state of the cart. We put in one piece of test data
 const initialCart = [
-{
-    "id": 1,
-    "product_id": 1,
-    "quantity": 10,
-    "productName": "Organic Green Tea",
-    "price": 12.99,
-    "imageUrl": "https://picsum.photos/id/225/300/200",
-    "description": "Premium organic green tea leaves, rich in antioxidants and offering a smooth, refreshing taste."
-  },
+    {
+        "id": 1,
+        "product_id": 1,
+        "quantity": 10,
+        "product_name": "Organic Green Tea",
+        "price": 12.99,
+        "image_url": "https://picsum.photos/id/225/300/200",
+        "description": "Premium organic green tea"
+    }
 ];
 
-// Create an atom for the cart
 export const cartAtom = atom(initialCart);
 
-// Custom hook for cart operations
 export const useCart = () => {
-  const [cart, setCart] = useAtom(cartAtom);
+    const [cart, setCart] = useAtom(cartAtom);
 
-  // Function to calculate the total price of items in the cart
-  const getCartTotal = () => {
-    return cart.reduce((total, item) => total + (item.price * item.quantity), 0).toFixed(2);
-  };
-
-  // add in setters here
-
+    /*
+      Contract of the product object should be:
+      - id: int, primary key of the product
+      - product_name: string, name of the product
+      - quantity: int, the quantity
+      - price: decimal
+      - image_url: URL of the image
+      - description: string
+    */
     const addToCart = (product) => {
-				// check if the product is already in the shopping cart
+
+
+        // check if the product is already in the shopping cart
         const existingCartItem = cart.find(cartItem => cartItem.product_id === product.id);
 
         // if the product is not in the cart
@@ -37,8 +38,8 @@ export const useCart = () => {
             const newCartItem = {
                 id: Math.floor(Math.random() * 1000 + 1),
                 product_id: product.id,
-                productName: product.name,
-                imageUrl: product.image,
+                product_name: product.name,
+                image_url: product.image,
                 description: product.description,
                 quantity: 1,
                 price: product.price
@@ -46,12 +47,49 @@ export const useCart = () => {
             const cloned = [...cart, newCartItem];
             setCart(cloned);
         } else {
+
             modifyQuantity(existingCartItem.product_id, existingCartItem.quantity + 1)
         }
+
+
     }
 
-  return {
-    cart,
-    getCartTotal,
-  };
-};
+    const modifyQuantity = (product_id, quantity) => {
+
+        if (quantity < 1) {
+            return;
+        }
+
+        // check if the product is already in the shopping cart
+        const existingCartItem = cart.find(cartItem => cartItem.product_id === product_id);
+
+        // modifying the cart item's quantity to be its current quantity + 1
+        const clonedCartItem = { ...existingCartItem, "quantity": quantity };
+        
+        // const cloned = cart.map(currentCartItem => {
+        //     if (currentCartItem.id !== clonedCartItem.id) {
+        //         return currentCartItem
+        //     } else {
+        //         return clonedCartItem;
+        //     }
+        // })
+
+        const cloned = cart.map(i => i.id !== clonedCartItem.id ? i : clonedCartItem)
+
+        setCart(cloned)
+    }
+
+    const removeFromCart = (product_id) => {
+        const existingCartItem = cart.find(i => i.product_id === product_id);
+        const cloned = cart.filter(currentCartItem => currentCartItem.id !== existingCartItem.id)
+        setCart(cloned);
+    }
+
+
+    return {
+        cart,
+        addToCart,
+        modifyQuantity,
+        removeFromCart
+    }
+}

@@ -15,7 +15,9 @@
     "jotai": "^2.12.5",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "seamless-immutable": "^7.1.4",
     "wouter": "^3.7.1",
+    "yarn": "^1.22.22",
     "yup": "^1.6.1"
   },
   "devDependencies": {
