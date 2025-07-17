@@ -1,6 +1,5 @@
-
-import { useEffect, useState } from "react"
-import axios from "axios"
+import { useEffect, useState } from "react";
+import axios from "axios";
 import ProductCard from "./ProductCard";
 import { useCart } from "./CartStore";
 import { useLocation } from "wouter";
@@ -13,18 +12,18 @@ export default function ProductPage() {
     const {addToCart} = useCart();
 
     const [_, setLocation] = useLocation();
-
-    useEffect( () => {
-
+    
+    useEffect(() => {
         const fetchProducts = async () => {
-           const response =  await axios.get('products.json');
-           setProducts(response.data);
-           
-        }
-        fetchProducts();
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/products`);
+      setProducts(response.data);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    }};
 
-
-    }, []); // <-- empty array means run once when the component is mounted (aka, rendered for the first time)
+  fetchProducts();
+}, []);
 
     const handleAddToCart = product=>{
         addToCart(product);
