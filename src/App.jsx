@@ -8,8 +8,8 @@ import RegisterPage from './RegisterPage';
 import { Route, Switch } from 'wouter';
 import ShoppingCart from './ShoppingCart';
 import FlashMessage from "./FlashMessage";
-import UserLogin from "./UserLogin"
-
+import UserLogin from "./UserLogin";
+import Profile from "./Profile";
 
 function App() {
 
@@ -30,6 +30,7 @@ function App() {
         <Route path="/register" component={RegisterPage} />
         <Route path="/cart" component={ShoppingCart} />
         <Route path="/login" component={UserLogin} />
+        <Route path="/profile" component={Profile} />
       </Switch>
 
 <footer className="bg-dark text-white text-center py-3">
