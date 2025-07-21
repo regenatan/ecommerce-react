@@ -1,8 +1,17 @@
-import { useCart } from "./CartStore"
-
+import React, { useEffect } from 'react';
+import { useCart } from "./CartStore";
+import { useJwt } from "./UserStore";
+import axios from 'axios';
 export default function ShoppingCartPage() {
 
-    const { cart, modifyQuantity, removeFromCart } = useCart();
+    const { cart, fetchCart, getCartTotal, modifyQuantity, removeFromCart, isLoading } = useCart();
+
+    const { getJwt} = useJwt();
+
+    // Fetch the cart data when the component mounts
+    useEffect(() => { 
+        fetchCart();
+    }, []);
 
     return (<>
         <div className="container">

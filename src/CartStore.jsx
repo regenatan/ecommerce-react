@@ -1,4 +1,7 @@
 import { atom, useAtom } from 'jotai';
+import axios from 'axios';
+import { useEffect, useRef } from "react";
+import { useJwt } from "./UserStore";
 
 const initialCart = [
     {
@@ -13,9 +16,40 @@ const initialCart = [
 ];
 
 export const cartAtom = atom(initialCart);
+export const cartLoadingAtom = atom(false);
 
 export const useCart = () => {
     const [cart, setCart] = useAtom(cartAtom);
+
+    const [isLoading, setIsLoading] = useAtom(cartLoadingAtom);
+    const { getJwt } = useJwt();
+
+    const updateCart = async (updatedCart) => {
+        const jwt = getJwt();
+        setIsLoading(true);
+        try {
+            // .map  will generate the new array
+            // which will consist of the elements from the
+            // original array but transformed somehow
+            const updatedCartItems = updatedCart.map(item => ({
+                product_id: item.product_id,
+                quantity: item.quantity
+            })
+            );
+            await axios.put(import.meta.env.VITE_API_URL + '/api/cart', {
+                cartItems: updatedCartItems
+            }, {
+                headers: {
+                    Authorization: 'Bearer ' + jwt
+                }
+            })
+
+        } catch (e) {
+            console.error("Error updating cart:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    }
 
     /*
       Contract of the product object should be:
@@ -50,8 +84,7 @@ export const useCart = () => {
 
             modifyQuantity(existingCartItem.product_id, existingCartItem.quantity + 1)
         }
-
-
+        updateCart(modifiedCart);
     }
 
     const modifyQuantity = (product_id, quantity) => {
@@ -77,19 +110,43 @@ export const useCart = () => {
         const cloned = cart.map(i => i.id !== clonedCartItem.id ? i : clonedCartItem)
 
         setCart(cloned)
+
+    updateCart(modifiedCart);
     }
 
     const removeFromCart = (product_id) => {
         const existingCartItem = cart.find(i => i.product_id === product_id);
         const cloned = cart.filter(currentCartItem => currentCartItem.id !== existingCartItem.id)
         setCart(cloned);
+        updateCart(modifiedCart);
     }
 
+    const fetchCart = async () => {
+        const jwt = getJwt();
+        setIsLoading(true);
+        try {
+            const response = await axios.get(
+                `${import.meta.env.VITE_API_URL}/api/cart`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${jwt}`,
+                    },
+                }
+            );
+            setCart(response.data);
+        } catch (error) {
+            console.error("Error fetching cart:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     return {
         cart,
         addToCart,
+        updateCart,
         modifyQuantity,
-        removeFromCart
+        removeFromCart,
+        fetchCart
     }
 }
