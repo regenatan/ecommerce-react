@@ -25,6 +25,8 @@ export default function ProductPage() {
   fetchProducts();
 }, []);
 
+
+
     const handleAddToCart = product=>{
         addToCart(product);
         setLocation('/cart');
