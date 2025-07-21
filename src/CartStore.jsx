@@ -3,17 +3,6 @@ import axios from 'axios';
 import { useEffect, useRef } from "react";
 import { useJwt } from "./UserStore";
 
-const initialCart = [
-    {
-        "id": 1,
-        "product_id": 1,
-        "quantity": 10,
-        "product_name": "Organic Green Tea",
-        "price": 12.99,
-        "image_url": "https://picsum.photos/id/225/300/200",
-        "description": "Premium organic green tea"
-    }
-];
 
 export const cartAtom = atom(initialCart);
 export const cartLoadingAtom = atom(false);
