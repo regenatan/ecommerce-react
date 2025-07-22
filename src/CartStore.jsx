@@ -1,54 +1,51 @@
 import { atom, useAtom } from 'jotai';
 import axios from 'axios';
-import { useEffect, useRef } from "react";
 import { useJwt } from "./UserStore";
+import { useFlashMessage } from "./FlashMessageStore";
 
-const initialCart = [
-    {
-        "id": 1,
-        "product_id": 1,
-        "quantity": 10,
-        "product_name": "Organic Green Tea",
-        "price": 12.99,
-        "image_url": "https://picsum.photos/id/225/300/200",
-        "description": "Premium organic green tea"
-    }
-];
+const initialCart = [];
 
 export const cartAtom = atom(initialCart);
 export const cartLoadingAtom = atom(false);
 
 export const useCart = () => {
     const [cart, setCart] = useAtom(cartAtom);
+    const { getJwt } = useJwt();
+    const { showMessage } = useFlashMessage();
+
+        const fetchCart = async () => {
+        const jwt = getJwt();
+        const response = await axios.get(import.meta.env.VITE_API_URL + "/api/cart", {
+            headers: {
+                Authorization: "Bearer " + jwt
+            }
+        })
+            .catch((e) => {
+                console.error(e);
+            });
+        console.log(response.data);
+        setCart(response.data);
+    }
 
     const [isLoading, setIsLoading] = useAtom(cartLoadingAtom);
-    const { getJwt } = useJwt();
 
-    const updateCart = async (updatedCart) => {
+
+     const updateCart = async (modifiedCart) => {
         const jwt = getJwt();
-        setIsLoading(true);
-        try {
-            // .map  will generate the new array
-            // which will consist of the elements from the
-            // original array but transformed somehow
-            const updatedCartItems = updatedCart.map(item => ({
-                product_id: item.product_id,
-                quantity: item.quantity
-            })
-            );
-            await axios.put(import.meta.env.VITE_API_URL + '/api/cart', {
-                cartItems: updatedCartItems
-            }, {
-                headers: {
-                    Authorization: 'Bearer ' + jwt
-                }
-            })
-
-        } catch (e) {
-            console.error("Error updating cart:", error);
-        } finally {
-            setIsLoading(false);
-        }
+        const cartData = modifiedCart.map(cartItem => ({
+            product_id: cartItem.product_id,
+            quantity: cartItem.quantity
+        }));
+        await axios.put(import.meta.env.VITE_API_URL + "/api/cart", { "cartItems": cartData}, {
+            headers:{
+                Authorization:'Bearer ' + jwt
+            }
+        })
+        .catch(e => {
+            console.error(e);
+            showMessage("Error updating the cart", "danger");
+        })
+        
     }
 
     /*
@@ -60,8 +57,8 @@ export const useCart = () => {
       - image_url: URL of the image
       - description: string
     */
-    const addToCart = (product) => {
-
+ 
+      const addToCart = (product) => {
 
         // check if the product is already in the shopping cart
         const existingCartItem = cart.find(cartItem => cartItem.product_id === product.id);
@@ -80,14 +77,13 @@ export const useCart = () => {
             }
             const cloned = [...cart, newCartItem];
             setCart(cloned);
+            updateCart(cloned);
         } else {
-
             modifyQuantity(existingCartItem.product_id, existingCartItem.quantity + 1)
         }
-        updateCart(cloned);
     }
 
-    const modifyQuantity = (product_id, quantity) => {
+    const modifyQuantity = async (product_id, quantity) => {
 
         if (quantity < 1) {
             return;
@@ -98,7 +94,7 @@ export const useCart = () => {
 
         // modifying the cart item's quantity to be its current quantity + 1
         const clonedCartItem = { ...existingCartItem, "quantity": quantity };
-        
+
         // const cloned = cart.map(currentCartItem => {
         //     if (currentCartItem.id !== clonedCartItem.id) {
         //         return currentCartItem
@@ -107,11 +103,10 @@ export const useCart = () => {
         //     }
         // })
 
-        const cloned = cart.map(i => i.id !== clonedCartItem.id ? i : clonedCartItem)
-
-        setCart(cloned)
-
-    updateCart(cloned);
+        const cloned = cart.map(i => i.id !== clonedCartItem.id ? i : clonedCartItem);
+        updateCart(cloned);
+        await setCart(cloned);
+      
     }
 
     const removeFromCart = (product_id) => {
@@ -121,25 +116,7 @@ export const useCart = () => {
         updateCart(cloned);
     }
 
-    const fetchCart = async () => {
-        const jwt = getJwt();
-        setIsLoading(true);
-        try {
-            const response = await axios.get(
-                `${import.meta.env.VITE_API_URL}/api/cart`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${jwt}`,
-                    },
-                }
-            );
-            setCart(response.data);
-        } catch (error) {
-            console.error("Error fetching cart:", error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+
 
     return {
         cart,

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
@@ -7,74 +8,72 @@ import { useFlashMessage } from './FlashMessageStore';
 import { useJwt } from './UserStore';
 
 function UserLogin() {
-  const [, setLocation] = useLocation();
-  const { showMessage } = useFlashMessage();
-  const { setJwt } = useJwt();
 
+    const [location, setLocation] = useLocation();
+    const {setJwt} = useJwt();
 
-  const initialValues = {
-    email: '',
-    password: ''
-  };
+    const {showMessage} = useFlashMessage();
 
-
-  const validationSchema = Yup.object({
-    email: Yup.string().email('Invalid email address').required('Required'),
-    password: Yup.string().required('Required')
-  });
-
-
-  const handleSubmit = async (values, actions) => {
-    try {
-      const response = await axios.post(import.meta.env.VITE_API_URL + '/api/users/login', values);
-      console.log('Login successful:', response.data);
-      // todo: store the JWT 
-      setJwt(response.data.token); // Store the JWT
-      
-      actions.setSubmitting(false);
-      showMessage('Login successful!', 'success');
-      setLocation('/');
-    } catch (error) {
-      console.error('Login error:', error);
-      actions.setErrors({ submit: error.response.data.message });      
-      actions.setSubmitting(false);
+    const initialValues = {
+        'email': '',
+        'password': ''
     }
-  };
 
-  return (
-    <div className="container mt-5">
-      <h2>Login</h2>
-      <Formik
-        initialValues={initialValues}
-        validationSchema={validationSchema}
-        onSubmit={handleSubmit}
-      >
-        {function(formik) {
-          return (
-            <Form>
-              <div className="mb-3">
-                <label htmlFor="email" className="form-label">Email</label>
-                <Field type="email" id="email" name="email" className="form-control" />
-                <ErrorMessage name="email" component="div" className="text-danger" />
-              </div>
+    const validationSchema = Yup.object({
+        email: Yup.string().email().required(),
+        password: Yup.string().required()
+    })
 
-              <div className="mb-3">
-                <label htmlFor="password" className="form-label">Password</label>
-                <Field type="password" id="password" name="password" className="form-control" />
-                <ErrorMessage name="password" component="div" className="text-danger" />
-              </div>
+    const handleSubmit = async(values, formikHelpers)=>{
+        try {
+            const response = await axios.post(import.meta.env.VITE_API_URL  + '/api/users/login', values);
+            console.log(response.data);
+            setLocation("/");
+            showMessage("You have logged in successfully!", "success");
+            // todo: Store the JWT
+            const token = response.data.token;
+            setJwt(token);
+        } catch (e) {
+            showMessage("Error logging in!");
+            console.error(e);
+        } finally {
+            formikHelpers.setSubmitting(false);
+        }
+    }
 
-              {formik.errors.submit && <div className="alert alert-danger">{formik.errors.submit}</div>}
+    return (
+        <div className="container mt-2 mb-2">
+            <h2>Login</h2>
+            <Formik
+                initialValues={initialValues}
+                validationSchema={validationSchema}
+                onSubmit={handleSubmit}
+            >
+                {
+                    function(formik){
+                        return (
+                            <Form>
+                                <div className='mb3'>
+                                    <label>Email</label>
+                                    <Field type="email" id="email" name="email" className="form-control"/>
+                                    <ErrorMessage name="email" component="div" className="text-danger"/>
+                                </div>
+                                <div className="mb3">
+                                    <label>Password</label>
+                                    <Field type="password" id="password" name="password" className="form-control"/>
+                                    <ErrorMessage name="password" component="div" className="text-danger"/>
+                                </div>
+                                <button type="submit" className="btn btn-primary mt-2" disabled={formik.isSubmitting}>
+                                    Log In
+                                </button>
+                            </Form>
+                        )
+                    }
+                }
+            </Formik>
 
-              <button type="submit" className="btn btn-primary" disabled={formik.isSubmitting}>
-                {formik.isSubmitting ? 'Logging in...' : 'Login'}
-              </button>
-            </Form>
-          );
-        }}
-      </Formik>
-    </div>
-  );
+        </div>
+    );
 }
 
 export default UserLogin;
